@@ -1,40 +1,24 @@
 #include "manoBiblioteka.h"
 
+
 void tvarkymas (string& zodis, const int pos){
 
-    string mark = "“";
-    size_t rasti = zodis.find(mark);
-    
-    if (rasti == string::npos) {
-        rasti = zodis.find("”");
-        mark = "”";
-    }
-    if (rasti == string::npos) {
-        rasti = zodis.find("„");
-        mark = "„";
-    }
-    if (rasti == string::npos) {
-        rasti = zodis.find("–");
-        mark = "–";
-    }
-    if (rasti == string::npos) {
-        rasti = zodis.find("-");
-        mark = "-";
-    }
-    if (rasti == string::npos) {
-        rasti = zodis.find(",");
-        mark = ",";
-    }
-    if (rasti == string::npos) {
-        rasti = zodis.find('"');
-        mark = '"';
-    }
-    if (rasti != string::npos) {
-        /// istrinamas simbolis
-        zodis.erase(rasti, mark.length());
+
+    vector<string> marks = {"“", "”", "„", "–", "-", ",", ")", "(", "[", "]"};
+
+    for (const string& mark : marks) {
+        size_t rasti = zodis.find(mark);
+        while (rasti != string::npos) {
+            zodis.erase(rasti, mark.length());
+            rasti = zodis.find(mark); 
+        }
     }
 
-    /// atskirai rasti zodzius su "." 
+    /// istrina skaicius
+    auto it = remove_if(zodis.begin(), zodis.end(), ::isdigit);
+    zodis.erase(it, zodis.end());
+
+    /// istrina zodzius su "."
     if (!zodis.empty() && (zodis.front() == '.' || zodis.back() == '.')) {
         if (zodis.front() == '.') {
             zodis.erase(0, 1);
@@ -48,7 +32,18 @@ void tvarkymas (string& zodis, const int pos){
 
 bool ArLink ( const string& link )
 {    
-    return link.find('.') != string::npos;
+    // const std::regex httpsPattern
+    //         ("https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)");
+    // const std::regex wwwPattern
+    //         ("[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)");
+
+    // return (std::regex_match(link, httpsPattern) || std::regex_match(link, wwwPattern));
+
+    return link.find('.') != string::npos;   
+    /*
+    npos reiškia eilučių paieškų sąlygą „nerasta“, reikšmė paprastai yra didžiausia dydis,
+    kurį nurodo dydis_t tipas, nurodant, kad eilutėje nerasta simbolio arba poeilutės.
+    */ 
 }
 
 void spausdinimas(map <string, vector <int>>& zodziai){
@@ -65,9 +60,9 @@ void spausdinimas(map <string, vector <int>>& zodziai){
                 if(i< it->second.size()-1) isvesti <<", ";
             }
             isvesti<<endl;
-        }              
+        }     
     }
-    
+
     isvesti<<endl<<"Rasti URL: "<<endl;
 
     for( auto it = zodziai.begin(); it!= zodziai.end(); it++){
@@ -122,8 +117,6 @@ void skaitymas(map <string, vector <int>>& zodziai, vector <string> linkai){
         return;
     }
 
-
-    // char raide;
     string line, zodis;
     int eilute=0;
 
@@ -133,25 +126,18 @@ void skaitymas(map <string, vector <int>>& zodziai, vector <string> linkai){
         
         istringstream dalijimas(line); /// leidzia is eilutes skaityti kaip is failo
         eilute++;
-        cout<<eilute<<endl;
 
         while( dalijimas >> zodis){
 
             std::transform(zodis.begin(), zodis.end(), zodis.begin(), ::towlower);
             
             tvarkymas(zodis, 0);
-            tvarkymas(zodis, zodis.length()-1);
-            // cout<<zodis<<" ";
-
-            // if(ArLink(zodis)) linkai.push_back(zodis);
-           
+            tvarkymas(zodis, zodis.length()-1);         
             pridetiMAP(zodziai, eilute, zodis);
 
         }
         
     }
-
-
 
     failas.close();
 
