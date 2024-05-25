@@ -4,10 +4,11 @@
 int main() {
 
     map <string, vector <int> > zodziai;
-    vector <string> linkai; 
+    vector <string> linkai;
+    
 
-    skaitymas(zodziai, linkai);
-    spausdinimas(zodziai);
+    skaitymas(zodziai,linkai);
+    spausdinimas(zodziai, linkai);
 
    
 

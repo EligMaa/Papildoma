@@ -4,7 +4,7 @@
 void tvarkymas (string& zodis, const int pos){
 
 
-    vector<string> marks = {"“", "”", "„", "–", "-", ",", ")", "(", "[", "]"};
+    vector<string> marks = {"“", "”", "„", "–", "-", ",", ")", "(", "[", "]", "%", "~"};
 
     for (const string& mark : marks) {
         size_t rasti = zodis.find(mark);
@@ -39,16 +39,24 @@ bool ArLink ( const string& link )
 
     // return (std::regex_match(link, httpsPattern) || std::regex_match(link, wwwPattern));
 
-    return link.find('.') != string::npos;   
+    return (link.find(".com") != string::npos) || 
+           (link.find(".lt") != string::npos)  || 
+           (link.find("http") != string::npos) || 
+           (link.find("www") != string::npos);
     /*
     npos reiškia eilučių paieškų sąlygą „nerasta“, reikšmė paprastai yra didžiausia dydis,
     kurį nurodo dydis_t tipas, nurodant, kad eilutėje nerasta simbolio arba poeilutės.
     */ 
 }
 
-void spausdinimas(map <string, vector <int>>& zodziai){
+bool ArEmail(const std::string& email)
+{
+    return email.find('@') != string::npos; 
+}
 
-    ofstream isvesti ("rez.txt");
+void spausdinimas(map <string, vector <int>>& zodziai,  vector <string>& linkai){
+
+    ofstream isvesti ("rez.txt");  
 
     for( auto it = zodziai.begin(); it!= zodziai.end(); it++){
         if(it->second.size() >1){
@@ -56,7 +64,7 @@ void spausdinimas(map <string, vector <int>>& zodziai){
             isvesti<<"eiluteses: ";
 
             for(size_t i=0; i < it->second.size(); ++i){
-                isvesti<<it->second[i]<<" ";
+                isvesti<<it->second[i];
                 if(i< it->second.size()-1) isvesti <<", ";
             }
             isvesti<<endl;
@@ -65,40 +73,42 @@ void spausdinimas(map <string, vector <int>>& zodziai){
 
     isvesti<<endl<<"Rasti URL: "<<endl;
 
-    for( auto it = zodziai.begin(); it!= zodziai.end(); it++){
-        
-        if( ArLink(it->first) ){
-            isvesti<<it->first<<endl;
-        }
+    for(size_t i=0; i<=linkai.size(); i++){
+        isvesti<<linkai[i]<<endl;
     }
 
     isvesti.close();
 }
 
-void pridetiMAP(map <string, vector <int>>& zodziai, int& eil, string& zodis){
+void pridetiMAP(map <string, vector <int>>& zodziai, int& eil, string& zodis, vector <string>& linkai){
 
     if (zodis.empty())  return;
 
     auto it = zodziai.find(zodis);              /// iesko ar jau yra paminetas toks zodis
     /// jei zodzio neranda, tai iteratoriu grazina i zodziai.end()
-    if(it == zodziai.end()){
+    if(ArLink(zodis) || ArEmail(zodis)) {
+        linkai.push_back(zodis); 
+             
+    }
+    else if(it == zodziai.end()){
         vector<int>eilute;
         eilute.push_back(eil);
 
         auto pp = zodziai.insert(pair<string, vector<int>>(zodis, eilute));
 
         // cout << pp.first->first << endl;
-
+       
     }
     else{  /// kai toks zodis jau buvo paminetas
         it->second.push_back(eil);
         // cout<<it->first<<endl;
     }
+    
 
 
 }
 
-void skaitymas(map <string, vector <int>>& zodziai, vector <string> linkai){
+void skaitymas(map <string, vector <int>>& zodziai,  vector <string>& linkai){
 
     ifstream failas("tekstas.txt");
     SetConsoleOutputCP(CP_UTF8);                                            /// naudoja lietuviska abecele
@@ -132,8 +142,8 @@ void skaitymas(map <string, vector <int>>& zodziai, vector <string> linkai){
             std::transform(zodis.begin(), zodis.end(), zodis.begin(), ::towlower);
             
             tvarkymas(zodis, 0);
-            tvarkymas(zodis, zodis.length()-1);         
-            pridetiMAP(zodziai, eilute, zodis);
+            tvarkymas(zodis, zodis.length()-1);    
+            pridetiMAP(zodziai, eilute, zodis, linkai);
 
         }
         
