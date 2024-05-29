@@ -1,10 +1,12 @@
 #include "manoBiblioteka.h"
 
+bool ArLink ( const string& link );
+bool ArEmail(const string& email);
 
 void tvarkymas (string& zodis, const int pos){
 
 
-    vector<string> marks = {"“", "”", "„", "–", "-", ",", ")", "(", "[", "]", "%", "~"};
+    vector<string> marks = {"“", "”", "„", "–", "-", ",", ")", "(", "[", "]", "%", "~",  "°", ":"};
 
     for (const string& mark : marks) {
         size_t rasti = zodis.find(mark);
@@ -15,8 +17,15 @@ void tvarkymas (string& zodis, const int pos){
     }
 
     /// istrina skaicius
-    auto it = remove_if(zodis.begin(), zodis.end(), ::isdigit);
-    zodis.erase(it, zodis.end());
+    if( !(ArLink(zodis)||ArEmail(zodis))){ 
+        auto it = remove_if(zodis.begin(), zodis.end(), ::isdigit);
+        zodis.erase(it, zodis.end());
+    }
+
+    if( (ArLink(zodis)||ArEmail(zodis))){ 
+        auto it = remove_if(zodis.end()-2, zodis.end(), ::isdigit);
+        zodis.erase(it, zodis.end());
+    }
 
     /// istrina zodzius su "."
     if (!zodis.empty() && (zodis.front() == '.' || zodis.back() == '.')) {
@@ -39,17 +48,19 @@ bool ArLink ( const string& link )
 
     // return (std::regex_match(link, httpsPattern) || std::regex_match(link, wwwPattern));
 
-    return (link.find(".com") != string::npos) || 
-           (link.find(".lt") != string::npos)  || 
-           (link.find("http") != string::npos) || 
-           (link.find("www") != string::npos);
+    return (link.find(".com") != string::npos)  || 
+            (link.find(".lt") != string::npos)  || 
+            (link.find(".eu") != string::npos)  ||
+            (link.find("http") != string::npos) || 
+            (link.find("www") != string::npos)  ||
+            (link.find('.') != string::npos && link.find('.') != link.size() - 1 && link.find('.') != 0);
     /*
     npos reiškia eilučių paieškų sąlygą „nerasta“, reikšmė paprastai yra didžiausia dydis,
     kurį nurodo dydis_t tipas, nurodant, kad eilutėje nerasta simbolio arba poeilutės.
     */ 
 }
 
-bool ArEmail(const std::string& email)
+bool ArEmail(const string& email)
 {
     return email.find('@') != string::npos; 
 }
@@ -58,11 +69,15 @@ void spausdinimas(map <string, vector <int>>& zodziai,  vector <string>& linkai)
 
     ofstream isvesti ("rez.txt");  
 
+    isvesti << left << setw(20) << "Zodis" 
+            << setw(10) << "Kiekis" 
+            << "Eilutes" << endl;
+            isvesti<<"-------------------------------------------------------------------------"<<endl;
+
     for( auto it = zodziai.begin(); it!= zodziai.end(); it++){
         if(it->second.size() >1){
-            isvesti<< "„" << it->first << "“ buvo paminetas: "<<it->second.size()<<" kartus ";
-            isvesti<<"eiluteses: ";
-
+            isvesti<< left << setw(20)  << it->first << setw(10) <<it->second.size();
+            
             for(size_t i=0; i < it->second.size(); ++i){
                 isvesti<<it->second[i];
                 if(i< it->second.size()-1) isvesti <<", ";
@@ -73,12 +88,13 @@ void spausdinimas(map <string, vector <int>>& zodziai,  vector <string>& linkai)
 
     isvesti<<endl<<"Rasti URL: "<<endl;
 
-    for(size_t i=0; i<=linkai.size(); i++){
+    for(size_t i=0; i<=linkai.size()-1; i++){
         isvesti<<linkai[i]<<endl;
     }
 
     isvesti.close();
 }
+
 
 void pridetiMAP(map <string, vector <int>>& zodziai, int& eil, string& zodis, vector <string>& linkai){
 
@@ -141,8 +157,9 @@ void skaitymas(map <string, vector <int>>& zodziai,  vector <string>& linkai){
 
             std::transform(zodis.begin(), zodis.end(), zodis.begin(), ::towlower);
             
-            tvarkymas(zodis, 0);
-            tvarkymas(zodis, zodis.length()-1);    
+                tvarkymas(zodis, 0);
+                tvarkymas(zodis, zodis.length()-1);    
+            
             pridetiMAP(zodziai, eilute, zodis, linkai);
 
         }
